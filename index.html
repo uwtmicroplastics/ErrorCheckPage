@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+	
+
+	<title>TurfJS</title>
+</head>
+<body>
+<h1> test test </h1>
+	<p> turfjs </p>
+<script>
+
+var cluster= [];
+var features= [];
+var point1= turf.point([-122.4776,47.3291], {});
+
+
+$.getJSON("test_water.json", function(data){
+
+	features=data.features;
+
+	for (var i= 0, len= features.length; i < len; i++)
+	 {
+		var yesInside= turf.booleanPointInPolygon(point1, features[i]);
+		if(yesInside){
+			cluster.push(features[i]);
+			console.log(cluster)
+		}
+	}
+	createTable(cluster);
+})	
+
+
+	</script>
+</body>
+</html>
