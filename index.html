@@ -3,36 +3,234 @@
 <head>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
-	
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js'></script>
+	 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
 
-	<title>TurfJS</title>
+	<title>combined</title>
 </head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+.blk{
+	display: block;
+	margin: auto;
+	width: 100%;
+	height: 8vh;
+	border: black;
+	background color: #3366cc !important;
+	padding: 2px;
+	cursor: pointer;
+	color: black;
+	text-align: center
+}
+
+.blk:hover {
+  background-color: #669999;
+  color: black;
+
+}
+
+h2{
+	position: center;
+	text-align: center;
+	text-overflow: center;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+	#table 
+	     {width:30%; background-color: azure; padding: 2px; border: 2px solid #dddddd}
+	#map {height: 87vh; width: 68%; float: right; background-color: grey; padding-left: 10px}
+    	body {background-color: Azure;}
+    	h1 {color: MidnightBlue; padding: 10px}
+    	p {color: MidnightBlue; padding: 5px;}
+</style>
+
 <body>
-<h1> test test </h1>
-	<p> turfjs </p>
+	
+		<button onclick= "init(); holdon()" class="blk" ><h2>Click to Check coordinates</h2> </button>
+		<br>
+
+	
+	<div id= "map"> </div>
+	<div id= "table">
+		<h2 style: "padding: 10px" > Sample IDs with potentially wrong coordinates </h2>
+	</div>
+
+
 <script>
 
-var cluster= [];
-var features= [];
-var point1= turf.point([-122.4776,47.3291], {});
+var features= []
+var multiarray= []    //empty array for lat/lng/sample ID
+var goodpoints=[]    //empty array for valid sample ID's
+var allpoints=[]     //empty array for all sample ID's
+var badpoints=[]    //empty array for bad filtered points
+var filteredlat= [] //empty array for lat points for map
+var filteredlng= [] //empty array for lng points for map
+var filteredpop= [] //empty array for popup info for the map
+
+var url = 'https://raw.githubusercontent.com/lindseyhannah/turf/master/test_water.json';
+
+function holdon(){
+	alert("Please be patient, Im working on checking your sample points! Click OK to proceed");
+}
+
+//Function to initiate grabbing data from google sheets
+function init() {
+
+	// Google Sheets "shareable link".  Not the Script API!!
+	var mp = "https://docs.google.com/spreadsheets/d/1hknDatO8Esw7YS4V75aFrnAIExdyEhokbttLRFhddYY/edit?usp=sharing";
+	
+	//Tabletop function to call Googlesheet
+	Tabletop.init( { key: mp,
+					 callback: checkPoints,
+					 simpleSheet: true } );
+
+function checkPoints(data){
+//get lat and lng coords from the googlesheet and make array with lat/lng/sample points.  Also make seperate array for sample points. 
+	for (var row=0; row< data.length; row++){
+		//array with [lng, lat, sample id, date, location]
+		multiarray.push([[data[row].long], [data[row].lat],[data[row].sample_id],[data[row].sample_date], [data[row].sample_location]]);
+		allpoints.push(multiarray[row][2]);
+	};
 
 
-$.getJSON("test_water.json", function(data){
+//get JSON multipolygon data from Github
 
-	features=data.features;
+	$(function() {
+	
+		$.getJSON(url, function(data)
+		{
+		   features = data.features;
+		  console.log("working..."); 
+		  for(var j=0, lenj= features.length; j < lenj; j++)
+		  		{
+				for (var i=0, len= multiarray.length; i < len; i++) {
+		 	
+		 		//Add the + sign to force an integer so Turf can read it
+		 		//Turf takes point as (Lng, lat)
+		 		
+		 		var point= turf.point([(+multiarray[i][0]),(+multiarray[i][1])], {});
+		 		
+		 		var poly= features[j];	
+		 		var isIn=(turf.booleanPointInPolygon(point, poly));
+				 
+				 	if (isIn == true){
+				        //push valid points to array
+				 	    goodpoints.push(multiarray[i][2]);
+				 	};	
+				 };
+			
+				};
 
-	for (var i= 0, len= features.length; i < len; i++)
-	 {
-		var yesInside= turf.booleanPointInPolygon(point1, features[i]);
-		if(yesInside){
-			cluster.push(features[i]);
-			console.log(cluster)
+
+				 console.log("Number of valid sample points are " + goodpoints.length);
+
+
+
+				 badpoints= allpoints.filter(function(element){
+					return goodpoints.indexOf(element) === -1;
+					
+				});
+
+	
+				 	
+				 	for (w= 0; w<multiarray.length; w++){
+				 		if (badpoints.includes(multiarray[w][2])){
+				 			filteredlat.push(multiarray[w][1]);
+				 			filteredlng.push(multiarray[w][0]);
+				 			filteredpop.push([[multiarray[w][2]],[multiarray[w][3]], [multiarray[w][4]]])
+				 		}
+
+				 		}
+		console.log("popup is "+ filteredpop[1])
+		console.log(filteredpop.length)
+		console.log("this" + filteredlat.length)
+		console.log(filteredlat[2])
+		var markerarray= [];
+		for (var m=0; m< filteredlat.length; m++){	
+			var lat= filteredlat[m];
+			var lon= filteredlng[m];
+			var popup= ("Sample Number: " + filteredpop[m][0] + "<br>" + "Sample Location: " + filteredpop[m][2] + "<br>" + "Sample Date: " + filteredpop[m][1]);
+			var markerL= new L.LatLng(lat, lon);
+			var marker= new L.Marker(markerL).addTo(map);
+			marker.bindPopup(popup);
 		}
+		
+
+		
+
+
+		console.log("filtered array of bad points is " + badpoints.length)
+
+
+	
+	var myTableDiv= document.getElementById("table")
+	var table= document.createElement('TABLE')
+	var tableBody= document.createElement('TBODY')
+
+	table.appendChild(tableBody);
+
+	var heading= new Array();
+	heading[0]= "Sample ID"
+//
+	var tr= document.createElement("TR");
+	tableBody.appendChild(tr);
+	for (t=0; t<heading.length; t++) {
+		var th= document.createElement('TH')
+		th.appendChild(document.createTextNode(heading[t]));
+		tr.appendChild(th);
 	}
-	createTable(cluster);
-})	
+//rows
+	for (t=0; t< badpoints.length; t++){
+		var tr= document.createElement('TR');
+		for (j=0; j<badpoints[t].length; j++){
+			var td=document.createElement('TD')
+				td.appendChild(document.createTextNode(badpoints[t][j]));
+				tr.appendChild(td)
+		}
+	
+	tableBody.appendChild(tr);
+}
+myTableDiv.appendChild(table)
 
 
-	</script>
+
+})
+
+				
+				});
+
+				}
+			
+}
+               
+
+	
+var map = L.map("map").setView([40, -100], 2.3);
+
+// custom dark basemap
+var basemap = L.tileLayer("https://api.mapbox.com/styles/v1/lmhannah/cjxz1s2qa1d4q1cpy77g7ixbv/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoibG1oYW5uYWgiLCJhIjoiY2pvNHYzNnZ4MDBuNjNxcHUwZzR3dmR5bSJ9.c2ULzGUVCYiPhkvdiqTRZw", {
+	attribution: '&copy;<a href="https://www.mapbox.com/about/maps/">Mapbox</a>, &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>  ',
+	subdomains: "abcd",
+	maxZoom: 19
+});
+basemap.addTo(map);
+
+
+</script>
 </body>
 </html>
