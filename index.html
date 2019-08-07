@@ -67,7 +67,7 @@ tr:nth-child(even) {
 	
 	<div id= "map"> </div>
 	<div id= "table">
-		<h2 style: "padding: 10px" > Sample IDs with potentially wrong coordinates </h2>
+		<h2 style: "padding: 10px" > Double Check These Sample Coordinates </h2>
 	</div>
 
 
@@ -82,7 +82,7 @@ var filteredlat= [] //empty array for lat points for map
 var filteredlng= [] //empty array for lng points for map
 var filteredpop= [] //empty array for popup info for the map
 
-var url = 'https://raw.githubusercontent.com/lindseyhannah/turf/master/test_water.json';
+var url = 'https://raw.githubusercontent.com/lindseyhannah/turf/master/SimpleWater.json';
 
 function holdon(){
 	alert("Please be patient, Im working on checking your sample points! Click OK to proceed");
@@ -156,10 +156,7 @@ function checkPoints(data){
 				 		}
 
 				 		}
-		console.log("popup is "+ filteredpop[1])
-		console.log(filteredpop.length)
-		console.log("this" + filteredlat.length)
-		console.log(filteredlat[2])
+		
 		var markerarray= [];
 		for (var m=0; m< filteredlat.length; m++){	
 			var lat= filteredlat[m];
@@ -174,7 +171,7 @@ function checkPoints(data){
 		
 
 
-		console.log("filtered array of bad points is " + badpoints.length)
+		console.log("Number of 'bad' points is " + badpoints.length)
 
 
 	
@@ -220,7 +217,7 @@ myTableDiv.appendChild(table)
                
 
 	
-var map = L.map("map").setView([40, -100], 2.3);
+var map = L.map("map").setView([40, -100], 2);
 
 // custom dark basemap
 var basemap = L.tileLayer("https://api.mapbox.com/styles/v1/lmhannah/cjxz1s2qa1d4q1cpy77g7ixbv/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoibG1oYW5uYWgiLCJhIjoiY2pvNHYzNnZ4MDBuNjNxcHUwZzR3dmR5bSJ9.c2ULzGUVCYiPhkvdiqTRZw", {
